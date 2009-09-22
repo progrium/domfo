@@ -12,7 +12,7 @@ class RedirectResource(Resource):
     isLeaf = True
     
     def __init__(self, resolver):
-        self.resolver = resolver
+        self.resolver = client.Resolver(resolver)
     
     def render_GET(self, request):
         host = request.requestHeaders.getRawHeaders('Host', [None])[0]
@@ -49,7 +49,6 @@ def main():
     opts, args = parser.parse_args()
 
     log.startLogging(sys.stdout)
-    resolver = client.Resolver(opts.resolver)
     reactor.listenTCP(opts.port, Site(RedirectResource(resolver)), interface=opts.listen)
     reactor.run()
 
