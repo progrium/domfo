@@ -17,6 +17,7 @@ class RedirectResource(Resource):
     def render_GET(self, request):
         host = request.requestHeaders.getRawHeaders('Host', [None])[0]
         host = host.split(':')[0] # Drop the port
+        print "Looking up: %s" % host
         self.resolver.lookupText(host) \
             .addCallback(lambda r: self.do_redirect(host, r[0], request)) \
             .addErrback(lambda e: self.do_error(host, e, request))
@@ -25,8 +26,10 @@ class RedirectResource(Resource):
     def do_redirect(self, host, answers, request):
         for x in answers:
             data = str(x.payload.data[0])
-            if 'location=' in data:
+            if data.startswith('location='):
                 location = data.split('=')[1]
+                location = location[0:-1] if location[-1] == '/' else location
+                location = location + request.path
                 request.redirect(location)
                 print "%s -> %s" % (host, location)
         request.finish()
