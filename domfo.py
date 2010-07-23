@@ -1,12 +1,17 @@
 #!/usr/bin/env python
-import sys
+try:
+    from twisted.internet import pollreactor 
+    pollreactor.install()
+except: pass
 from twisted.internet import reactor
 from twisted.application import internet, service
 from twisted.web.server import Site, NOT_DONE_YET
 from twisted.web.resource import Resource
 from twisted.python import log
 from twisted.names import client
-from optparse import OptionParser
+import sys, os
+
+def opt(name, default=None, cast=str): return cast(os.environ.get(name, default))
 
 class RedirectResource(Resource):
     isLeaf = True
@@ -38,22 +43,16 @@ class RedirectResource(Resource):
         # Perhaps do something more useful here
         request.finish()
 
-def main():
-    parser = OptionParser()
-    parser.add_option('--port', '-p',
-                      help="Port number for Redirect HTTP server (default 8080)",
-                      default=8080, type='int')
-    parser.add_option('--listen', '-l',
-                      help="Interface for Redirect HTTP server to listen on",
-                      default='0.0.0.0', type='str')
-    parser.add_option('--resolver', '-r', 
-                      help="Set the DNS resolver",
-                      default='/etc/resolv.conf', type='str')
-    opts, args = parser.parse_args()
+    
+port        = opt('PORT', 8080, int)
+interface   = opt('INTERFACE', '0.0.0.0', str)
+resolver    = opt('RESOLVER', '/etc/resolv.conf', str)
+factory     = Site(RedirectResource(resolver))
 
+if __name__ == "__main__":
     log.startLogging(sys.stdout)
-    reactor.listenTCP(opts.port, Site(RedirectResource(resolver)), interface=opts.listen)
+    reactor.listenTCP(port, factory, interface=interface)
     reactor.run()
-
-if __name__ == '__main__':
-    main()
+else:
+    application = service.Application('domfo')
+    internet.TCPServer(port, factory, interface=interface).setServiceParent(application)
