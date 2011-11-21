@@ -1,5 +1,5 @@
 # domfo
-Simple Domain Forwarding Service
+Simple DNS-configured domain forwarding service
 
 This is a simple web server that redirects requests to the location found in the TXT record for the redirect subdomain in the host of the incoming request. There is no security, it's intended for public use.
 
