@@ -16,9 +16,9 @@ class DomainForwarder(Service):
     def handle(self, environ, start_response):
         host = environ.get('HTTP_HOST')
         host = 'redirect.' + host.split(':')[0] # Drop the port
-        answers = dns.resolver.query(host, 'TXT')
         location = None
         try:
+            answers = dns.resolver.query(host, 'TXT')
             for answer in answers:
                 for data in answer.strings:
                     if data.startswith('location='):
@@ -31,7 +31,7 @@ class DomainForwarder(Service):
             pass
         if location:
             print "%s -> %s" % (host, location)
-            start_response("301 Redirect", {"Location": location})
+            start_response("301 Redirect", [("Location", location)])
             return "Redirecting..."
         else:
             start_response("404 Not Found", [])
